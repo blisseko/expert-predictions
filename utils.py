@@ -24,6 +24,26 @@ def make_dataset(run_no, machine_accuracy):
 
     return X_train, X_test,X_cal,X_est, y_train, y_test,y_cal, y_est 
 
+def make_dataset_iris(run_no):
+    """Iris dataset preprocessing"""
+    # blisse: Added the Iris dataset (https://archive.ics.uci.edu/dataset/53/iris)
+    with open(f"{conf.ROOT_DIR}/data/iris.csv", "r") as f:
+        csv = np.loadtxt(f, delimiter=",")
+        y = csv[:, -1].astype(int)
+        x = csv[:, :-1].astype(int)
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        x, y, test_size=conf.test_split, random_state=42+run_no)
+
+    X_train, X_cal_est, y_train, y_cal_est = train_test_split(
+         X_train, y_train, test_size=2*conf.cal_split, random_state=42+run_no)
+    
+    # Estimation and calibration sets have the same size
+    X_cal, X_est, y_cal, y_est = train_test_split(
+         X_cal_est, y_cal_est, test_size=0.5, random_state=42+run_no)
+
+    return X_train, X_test,X_cal,X_est, y_train, y_test,y_cal, y_est 
+
 def make_dataset_real(run_no):
     """Real dataset"""
     file_ground_truth = 'densenet-bc-L190-k40'
