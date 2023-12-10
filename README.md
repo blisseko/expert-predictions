@@ -80,6 +80,9 @@ For **real** data experiments run (<*split*\> and <*runs*\> same as above):
 `python3 ./scripts/batch/real/run_all_splits.py`
 
 
+For **Iris** data experiments run:
+`python3  -m scripts.single.iris.standard_cp  --cal_split` <*split*\> `--runs` <*runs*\>
+
 ## Citation
 If you use parts of the code in this repository for your own research, please consider citing:
 
