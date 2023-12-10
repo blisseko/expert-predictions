@@ -95,7 +95,7 @@ class ConformalPrediction:
             # denominators for all P[\hat Y = Y ; C_alpha |  Y \in C_alpha(X), Y=y]
             denominators = torch.sum(sets_exp_ws, axis=1)    
             if not self.has_groups:
-                one_hot_ycal = F.one_hot(y_est_t)
+                one_hot_ycal = F.one_hot(y_est_t, conf.n_labels)
             else:
                 one_hot_ycal = F.one_hot(y_est_t[:,0])
 
