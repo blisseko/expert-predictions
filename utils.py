@@ -38,6 +38,9 @@ def make_dataset_iris(run_no):
     X_train, X_cal_est, y_train, y_cal_est = train_test_split(
          X_train, y_train, test_size=2*conf.cal_split, random_state=42+run_no)
     
+    if X_cal_est.shape[0] % 2 == 1:
+        X_cal_est = X_cal_est[:-1, :]
+        y_cal_est = y_cal_est[:-1]
     # Estimation and calibration sets have the same size
     X_cal, X_est, y_cal, y_est = train_test_split(
          X_cal_est, y_cal_est, test_size=0.5, random_state=42+run_no)
@@ -117,4 +120,3 @@ def find_difficulties():
             y_groups[i] = 1
     
     return y_groups
- 
