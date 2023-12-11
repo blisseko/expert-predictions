@@ -27,10 +27,13 @@ now = lambda:datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 # For a given number of labels and calibration and estimation split 
 # run experiments for all combinations of humans and machines
+conf.accuracies = np.array([0.5, 0.7])
+print(f"RUNNING WITH MODIFIED ACCURACY OPTIONS OF {conf.accuracies}")
+
 for human_accuracy in conf.accuracies:
     for machine_accuracy in conf.accuracies:
+        avg_acc = 0
         for run in tqdm(range(conf.n_runs_per_split)):
-
             res_dir = f"{results_root}/human{human_accuracy}_machine{machine_accuracy}_run{run}"
             if not os.path.exists(res_dir):
                 os.mkdir(res_dir)
@@ -39,7 +42,6 @@ for human_accuracy in conf.accuracies:
                 try:
                     with open(f"{res_dir}/logs.txt", 'w', buffering=1) as f:
                         sys.stdout = f
-                        
                         print(f"Creating {conf.data_size} data:"+\
                               f"{(1 - conf.cal_split - conf.test_split)*100}% train, "+\
                               f"{conf.cal_split*100}% calibration, "+\
@@ -53,7 +55,7 @@ for human_accuracy in conf.accuracies:
                         print(f"Creating machine with {machine_accuracy*100}% accuracy")
                         model = ModelSynthetic()
                         model.train(X_train, y_train)
-                        print(model.test(X_test, y_test))
+                        print(f"Synthetic model score: {model.test(X_test, y_test)}")
 
                         print(f"{now()}: Starting conformal prediction...")
                         conf_pred = ConformalPrediction(X_cal, y_cal, X_est, y_est, model, conf.delta)
@@ -75,16 +77,26 @@ for human_accuracy in conf.accuracies:
                         print(f"{now()}: Calculating error in test set for all alphas")
                         p_error_t = conf_pred.error_given_test_set_per_a(X_test, y_test, human.w_matrix, alphas)
                         p_error = p_error_t.detach().cpu().numpy()
+
                         with open(f"{res_dir}/alpha1_test_error", 'wb') as f1:
                             pickle.dump(p_error, f1, pickle.HIGHEST_PROTOCOL)
 
                         sys.stdout = original_stdout
+
+                    # # Print all of log.txt 
+                    with open(f"{res_dir}/logs.txt", 'r') as finished_log:
+                        print(finished_log.read())
+
                     sys.stderr = original_stderr
+                    avg_acc += (1-p_error_t[alpha_star_idx])
                 except:
                     print(sys.exc_info(), file=f_e)
                     sys.stdout = original_stdout
                     sys.stderr = original_stderr
                     raise
+
+        avg_acc = avg_acc / conf.n_runs_per_split
+        print(f"AVG ACC FOR HUMAN {human_accuracy*100}, MACHINE {machine_accuracy*100}: {avg_acc}")
 
 
 

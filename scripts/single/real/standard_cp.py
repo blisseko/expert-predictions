@@ -27,8 +27,8 @@ now = lambda:datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 # For a given number of calibration and estimation split 
 # run experiments for all models
 for model_name in conf.model_names:
+    avg_acc = 0
     for run in tqdm(range(conf.n_runs_per_split)):
-
         res_dir = f"{results_root}/{model_name}_run{run}"
         if not os.path.exists(res_dir):
             os.mkdir(res_dir)
@@ -49,7 +49,7 @@ for model_name in conf.model_names:
 
                     print(f"Initializing model ")
                     model = ModelReal(model_name)
-                    print(model.test(X_test, y_test))
+                    print(f"Real Model ({model_name}) score: {model.test(X_test, y_test)}")
 
                     print(f"{now()}: Starting conformal prediction...")
                     conf_pred = ConformalPrediction(X_cal, y_cal, X_est, y_est, model, conf.delta)
@@ -70,6 +70,15 @@ for model_name in conf.model_names:
                         pickle.dump(p_error, f1, pickle.HIGHEST_PROTOCOL)
 
                     sys.stdout = original_stdout
+
+
+                    # # # Print all of log.txt 
+                    # with open(f"{res_dir}/logs.txt", 'r') as finished_log:
+                    #     print(finished_log.read())
+
+                    sys.stderr = original_stderr
+                    avg_acc += (1-p_error_t[alpha_star_idx])
+
                 sys.stderr = original_stderr    
             except:
                 print(sys.exc_info()[0], file=f_e)
@@ -77,6 +86,8 @@ for model_name in conf.model_names:
                 sys.stderr = original_stderr
                 raise
 
+    avg_acc = avg_acc / conf.n_runs_per_split
+    print(f"AVG ACC for {model_name}={avg_acc}")
 
 
 

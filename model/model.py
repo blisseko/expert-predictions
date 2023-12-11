@@ -31,7 +31,30 @@ class ModelReal(Model):
             # Models keep stored the softmax outputs for each sample in test set,
             # so we only need the index of the correspondent sample to get the softmax output
 
+        # Case 1: Uniform 
+        # N, num_classes = self.model_logits.shape 
+        # max_prob = 0.25
+        # for i in range(len(self.model_logits)):
+        #     argmax = np.argmax(self.model_logits[i])  
+        #     deltas = np.array([(1-max_prob)/(num_classes-1) if ii != argmax else max_prob - self.model_logits[i, argmax] for ii in range(num_classes)], dtype=self.model_logits.dtype)
+        #     self.model_logits[i, :] = self.model_logits[i, :] + deltas
+
+        # Case 2: Top-k are near equivalent
+        top_prob = 0.25
+        adv = 0.05
+        low_prob = (1 - (top_prob * 3) + adv) / 7
+        for i in range(len(self.model_logits)):
+            argmax = np.argmax(self.model_logits[i])
+            if argmax < 3:
+                self.model_logits[i, :] = np.array([top_prob] * 3 + [low_prob] * 7)
+            elif argmax < 6:
+                self.model_logits[i, :] = np.array([low_prob] * 3 + [top_prob] * 3 + [low_prob] * 4)
+            else:
+                self.model_logits[i, :] = np.array([low_prob] * 7 + [top_prob] * 3)
+            self.model_logits[i, argmax] += adv
+        
     def predict(self, input, return_tensor=False):
+
         self.model_logits_t = torch.tensor(self.model_logits[input], device=conf.device)
         y_hat = self.model_logits_t.multinomial(1, replacement=True, generator=conf.torch_rng)
         if not return_tensor:
