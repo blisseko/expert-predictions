@@ -49,4 +49,7 @@ if sum_distr < 1.:
     distr += (1 - sum_distr)/conf.n_labels
 conf.class_probabilities = distr
 # Names of classifiers used in real data experiments
-conf.model_names = ['densenet-bc-L190-k40','preresnet-110','resnet-110']
+conf.model_names = ['densenet-bc-L190-k40']#,'preresnet-110','resnet-110']
+conf.model_names = conf.model_names + [name+"_sabotaged" for name in conf.model_names]
+# conf.model_names = [name+"_sabotaged" for name in conf.model_names]
+conf.model_names += ['bad_resnet']
